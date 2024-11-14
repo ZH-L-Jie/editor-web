@@ -58,15 +58,15 @@
           :show-alpha="false"
           :actions="['confirm','clear']"
           default-value="#18A058"
-          :swatches="[  // 预设颜色选项
+          :swatches="[
             '#FFFFFF',
             '#18A058',
             '#2080F0',
             '#F0A020',
-            'rgba(208, 48, 80, 1)',
-          ]" 
-          @confirm="setHighlight"  // 确认选择颜色时的处理函数
-          @clear="editor.chain().focus().unsetHighlight().run()"  // 清除高亮的处理函数
+            'rgba(208, 48, 80, 1)'
+          ]"
+          @confirm="setHighlight"      
+          @clear="editor.chain().focus().unsetHighlight().run()"    
         >
         </n-color-picker>
       </n-button-group>
