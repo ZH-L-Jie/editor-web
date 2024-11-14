@@ -5,18 +5,15 @@
       <!-- 文本样式按钮组 -->
       <n-button-group>
         <!-- 粗体按钮：点击时调用formatText方法，根据当前状态显示不同样式 -->
-        <n-button @click="formatText('bold')" 
-                 :type="editor.isActive('bold') ? 'primary' : 'default'">
+        <n-button @click="formatText('bold')" :type="editor.isActive('bold') ? 'primary' : 'default'">
           粗体
         </n-button>
         <!-- 斜体按钮 -->
-        <n-button @click="formatText('italic')"
-                 :type="editor.isActive('italic') ? 'primary' : 'default'">
+        <n-button @click="formatText('italic')" :type="editor.isActive('italic') ? 'primary' : 'default'">
           斜体
         </n-button>
         <!-- 删除线按钮 -->
-        <n-button @click="formatText('strike')"
-                 :type="editor.isActive('strike') ? 'primary' : 'default'">
+        <n-button @click="formatText('strike')" :type="editor.isActive('strike') ? 'primary' : 'default'">
           删除线
         </n-button>
       </n-button-group>
@@ -25,78 +22,69 @@
       <n-button-group>
         <!-- 左对齐按钮 -->
         <n-button @click="editor.chain().focus().setTextAlign('left').run()"
-                 :type="editor.isActive({ textAlign: 'left' }) ? 'primary' : 'default'">
+          :type="editor.isActive({ textAlign: 'left' }) ? 'primary' : 'default'">
           左对齐
         </n-button>
         <!-- 居中对齐按钮 -->
         <n-button @click="editor.chain().focus().setTextAlign('center').run()"
-                 :type="editor.isActive({ textAlign: 'center' }) ? 'primary' : 'default'">
+          :type="editor.isActive({ textAlign: 'center' }) ? 'primary' : 'default'">
           居中
         </n-button>
         <!-- 右对齐按钮 -->
         <n-button @click="editor.chain().focus().setTextAlign('right').run()"
-                 :type="editor.isActive({ textAlign: 'right' }) ? 'primary' : 'default'">
+          :type="editor.isActive({ textAlign: 'right' }) ? 'primary' : 'default'">
           右对齐
         </n-button>
       </n-button-group>
 
       <!-- 添加图片上传按钮 -->
       <n-button-group>
-        <n-upload
-          :show-file-list="false"
-          @change="handleImageUpload"
-          accept=".jpg,.jpeg,.png,.gif,.webp"
-          :max-size="2097152"
-          @before-upload="beforeUpload"
-        >
+        <n-upload :show-file-list="false" @change="handleImageUpload" accept=".jpg,.jpeg,.png,.gif,.webp"
+          :max-size="2097152" @before-upload="beforeUpload">
           <n-button>插入图片</n-button>
         </n-upload>
       </n-button-group>
 
       <!-- 添加链接按钮组 -->
       <n-button-group>
-        <n-button 
-          @click="handleLink"
-          :type="editor.isActive('link') ? 'primary' : 'default'"
-        >
+        <n-button @click="handleLink" :type="editor.isActive('link') ? 'primary' : 'default'">
           链接
         </n-button>
       </n-button-group>
+
+      <!-- 修改高亮按钮组，使用颜色选择器 -->
+      <n-button-group class="color-button-group">
+        <n-color-picker
+          :show-alpha="false"
+          :actions="['confirm','clear']"
+          default-value="#18A058"
+          :swatches="[  // 预设颜色选项
+            '#FFFFFF',
+            '#18A058',
+            '#2080F0',
+            '#F0A020',
+            'rgba(208, 48, 80, 1)',
+          ]" 
+          @confirm="setHighlight"  // 确认选择颜色时的处理函数
+          @clear="editor.chain().focus().unsetHighlight().run()"  // 清除高亮的处理函数
+        >
+        </n-color-picker>
+      </n-button-group>
     </div>
-    
+
     <!-- 编辑器内容区域 -->
     <editor-content :editor="editor" class="editor-content" />
 
     <!-- 图片上下文菜单 -->
-    <n-dropdown
-      :show="showImageMenu"
-      :options="imageMenuOptions"
-      :x="menuX"
-      :y="menuY"
-      placement="bottom-start"
-      @select="handleImageResize"
-      @clickoutside="closeImageMenu"
-    />
+    <n-dropdown :show="showImageMenu" :options="imageMenuOptions" :x="menuX" :y="menuY" placement="bottom-start"
+      @select="handleImageResize" @clickoutside="closeImageMenu" />
 
     <!-- 自定义尺寸对话框 -->
-    <n-modal
-      v-model:show="showCustomSizeModal"
-      title="自定义图片尺寸"
-      preset="dialog"
-      positive-text="确认"
-      negative-text="取消"
-      @positive-click="handleCustomSize"
-      @negative-click="closeCustomSizeModal"
-      :mask-closable="false"
-      :close-on-esc="false"
-    >
+    <n-modal v-model:show="showCustomSizeModal" title="自定义图片尺寸" preset="dialog" positive-text="确认" negative-text="取消"
+      @positive-click="handleCustomSize" @negative-click="closeCustomSizeModal" :mask-closable="false"
+      :close-on-esc="false">
       <n-input-group>
-        <n-input-number
-          v-model:value="customSize"
-          :min="1"
-          :max="500"
-          :precision="0"
-        />
+        <n-input-number v-model:value="customSize" :min="1" :max="500" :precision="0" />
         <n-button-group>
           <n-button>%</n-button>
         </n-button-group>
@@ -107,40 +95,27 @@
     </n-modal>
 
     <!-- 修改链接编辑气泡 -->
-    <n-popover
-      v-model:show="showLinkPopover"
-      :x="popoverX"
-      :y="popoverY"
-      trigger="manual"
-      placement="bottom"
-      @mouseleave="handlePopoverLeave"
-      @mouseenter="handlePopoverEnter"
-    >
+    <n-popover v-model:show="showLinkPopover" :x="popoverX" :y="popoverY" trigger="manual" placement="bottom"
+      @mouseleave="handlePopoverLeave" @mouseenter="handlePopoverEnter">
       <div class="link-popover">
-        <n-input
-          v-model:value="linkText"
-          placeholder="链接文本"
-          size="small"
-          class="link-input"
-          @focus="handleInputFocus"
-        />
-        <n-input
-          v-model:value="linkUrl"
-          placeholder="URL地址"
-          size="small"
-          class="link-input"
-          @focus="handleInputFocus"
-        />
+        <n-input v-model:value="linkText" placeholder="链接文本" size="small" class="link-input"
+          @focus="handleInputFocus" />
+        <n-input v-model:value="linkUrl" placeholder="URL地址" size="small" class="link-input"
+          @focus="handleInputFocus" />
         <div class="link-actions">
           <n-button size="small" @click="updateLink" type="primary">
             <template #icon>
-              <n-icon><CheckmarkCircle20Filled /></n-icon>
+              <n-icon>
+                <CheckmarkCircle />
+              </n-icon>
             </template>
             更新
           </n-button>
           <n-button size="small" @click="removeLink" type="error">
             <template #icon>
-              <n-icon><Delete20Regular /></n-icon>
+              <n-icon>
+                <Close />
+              </n-icon>
             </template>
             移除
           </n-button>
@@ -152,17 +127,18 @@
 
 <script setup>
 // 导入必要的依赖
-import { ref } from 'vue'
+import { ref, h } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3' // Tiptap核心组件
 import StarterKit from '@tiptap/starter-kit' // Tiptap基础功能包
 import TextAlign from '@tiptap/extension-text-align' // 文本对齐扩展
 import Highlight from '@tiptap/extension-highlight' // 文本高亮扩展
 import Image from '@tiptap/extension-image' // 图片扩展
 import Link from '@tiptap/extension-link' // 添加链接扩展导入
-import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText, NPopover, NInput, NIcon } from 'naive-ui' // Naive UI组件
+import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText, NPopover, NInput, NIcon, NColorPicker } from 'naive-ui' // Naive UI组件
 import { onBeforeUnmount } from 'vue' // Vue生命周期钩子
 import { TextSelection } from '@tiptap/pm/state' // 添加这行导入
-import { CheckmarkCircle20Filled, Delete20Regular } from '@vicons/fluent' // 添加图标导入
+import { CheckmarkCircle, Close, BrushSharp } from '@vicons/ionicons5' // 使用 Naive UI 推荐的图标库
+import { Color } from '@tiptap/extension-color'
 
 // 图片菜单状态
 const showImageMenu = ref(false)
@@ -187,7 +163,7 @@ const currentLink = ref(null) // 当前编辑的链接元素
 
 // 定时器引用
 const hoverTimer = ref(null) // 控制悬停延迟显示
-const leaveTimer = ref(null) // 控制离开延迟隐藏
+const leaveTimer = ref(null) // 控离开延迟隐藏
 
 // 更新图片尺寸选项，启用自定义选项
 const imageMenuOptions = [
@@ -209,10 +185,10 @@ const imageMenuOptions = [
  */
 const formatText = (format) => {
   if (!editor.value) return
-  
+
   // 获取当前选区
   const { from, to } = editor.value.state.selection
-  
+
   // 如果没有选中文本，直接返回
   if (from === to) {
     return
@@ -250,21 +226,21 @@ const formatText = (format) => {
 // 添加上传前的验证函数
 const beforeUpload = (data) => {
   const file = data.file
-  
+
   // 检查文件类型
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
     window.$message.error('只能上传 JPG、PNG、GIF 或 WebP 格式的图片')
     return false
   }
-  
+
   // 检查文件大小（2MB）
   const maxSize = 2 * 1024 * 1024
   if (file.size > maxSize) {
     window.$message.error('图片大小不能超过 2MB')
     return false
   }
-  
+
   return true
 }
 
@@ -299,7 +275,7 @@ const handleImageUpload = (data) => {
             class: 'resizable-image', // 添加类名以支持大小调整
           }
         })
-        .focus('end') // 将光标移动到图片后
+        .focus('end') // 将光移动到图片后
         .run()
 
       console.log('图片插入完成')
@@ -347,7 +323,7 @@ const handleImageContextMenu = (event) => {
   }
 }
 
-// 关闭图片菜单
+// 闭图片菜单
 const closeImageMenu = () => {
   console.log('关闭图片菜单')
   showImageMenu.value = false
@@ -373,7 +349,7 @@ const handleCustomSize = () => {
     currentImage: currentImage.value,
     customSize: customSize.value
   })
-  
+
   if (!currentImage.value) {
     console.warn('没有选中的图片')
     return
@@ -382,11 +358,11 @@ const handleCustomSize = () => {
   // 获取图片原始尺寸
   const originalWidth = currentImage.value.naturalWidth
   console.log('原始宽度:', originalWidth)
-  
+
   // 计算新的宽度
   const newWidth = (originalWidth * customSize.value) / 100
   console.log('计算的新宽度:', newWidth)
-  
+
   try {
     // 使用 currentImage 而不是 selectedImage
     currentImage.value.style.width = `${newWidth}px`
@@ -395,7 +371,7 @@ const handleCustomSize = () => {
   } catch (error) {
     console.error('设置图片尺寸时出错:', error)
   }
-  
+
   // 关闭对话框
   showCustomSizeModal.value = false
   // 清除引用
@@ -406,7 +382,7 @@ const handleCustomSize = () => {
 // 图片尺寸调整处理
 const handleImageResize = (size) => {
   console.log('处理图片尺寸:', size)
-  
+
   if (size === 'custom') {
     // 如果选择自定义尺寸，打开自定义尺寸对话框
     currentImage.value = selectedImage.value
@@ -424,11 +400,11 @@ const handleImageResize = (size) => {
   const originalWidth = selectedImage.value.naturalWidth
   const sizeValue = parseInt(size)
   const newWidth = (originalWidth * sizeValue) / 100
-  
-  // 设置新的宽度，保持宽高比
+
+  // 设置新的宽度，保持宽比
   selectedImage.value.style.width = `${newWidth}px`
   selectedImage.value.style.height = 'auto'
-  
+
   // 关闭菜单并清除引用
   showImageMenu.value = false
   selectedImage.value = null
@@ -477,28 +453,28 @@ const handleLinkClick = (event) => {
 const handleLinkHover = (event) => {
   const link = event.target.closest('a')
   if (link) {
-    // 清除已有的定时���
+    // 清除已有的定时
     if (hoverTimer.value) clearTimeout(hoverTimer.value)
     if (leaveTimer.value) clearTimeout(leaveTimer.value)
-    
+
     // 设置1秒后显示气泡
     hoverTimer.value = setTimeout(() => {
       currentLink.value = link
       linkText.value = link.textContent // 获取当前链接文本
       linkUrl.value = link.getAttribute('href') // 获取当前链接URL
-      
+
       // 计算气泡显示位置
       const rect = link.getBoundingClientRect()
       popoverX.value = rect.left
       popoverY.value = rect.bottom + window.scrollY
-      
+
       showLinkPopover.value = true
     }, 1000) // 1秒延迟
   }
 }
 
 // 处理链接离开事件
-const handleLinkLeave = (event) => {
+const handlePopoverLeave = (event) => {
   // 清除悬停定时器
   if (hoverTimer.value) {
     clearTimeout(hoverTimer.value)
@@ -510,7 +486,7 @@ const handleLinkLeave = (event) => {
   if (!isMovingToPopover) {
     // 设置1秒后关闭气泡
     leaveTimer.value = setTimeout(() => {
-      // 检查是否正在编辑（焦点在输入框中）
+      // 检查否正在编辑（焦点在输入框中）
       const isEditing = document.activeElement?.closest('.link-popover')
       if (!isEditing) {
         showLinkPopover.value = false
@@ -563,11 +539,35 @@ const removeLink = () => {
   }
 }
 
+// 修改设置高亮的函数
+const setHighlight = (color) => {
+  if (!editor.value) return
+  
+  // 检查是否有选中的文本
+  const { from, to } = editor.value.state.selection
+  if (from === to) {
+    window.$message.warning('请先选择要高亮的文本')
+    return
+  }
+
+  try {
+    editor.value.chain()
+      .focus()
+      .setHighlight({ color })  // 设置高亮颜色
+      .setTextSelection(to)     // 将光标移动到选区末尾
+      .unsetHighlight()         // 取消后续文本的高亮状态
+      .run()
+  } catch (error) {
+    console.error('设置高亮时出错:', error)
+    window.$message.error('设置高亮失败')
+  }
+}
+
 // 链接扩展配置
 Link.configure({
   openOnClick: true, // 点击时打开链接
   HTMLAttributes: {
-    class: 'custom-link', // 自定义样式类名
+    class: 'custom-link', // 自义样式类名
     target: '_blank', // 在新标签页打开
     rel: 'noopener noreferrer', // 安全属性
   },
@@ -577,22 +577,22 @@ Link.configure({
 const editor = useEditor({
   // 配置编辑器扩展
   extensions: [
-    // 配置StarterKit，包含基础编辑功能
+    // 配置StarterKit，包含基础编辑功
     StarterKit.configure({
       heading: {
         levels: [1, 2, 3, 4, 5, 6],
         HTMLAttributes: {
           class: 'heading',
         }
-      }
+      },
+      // 禁用 StarterKit 中的 highlight，因为我们要使用自定义的 highlight
+      highlight: false,
     }),
     // 配置文本对齐功能
     TextAlign.configure({
       types: ['heading', 'paragraph', 'image'], // 可以对齐的元素类型
       defaultAlignment: 'left', // 默认左对齐
     }),
-    Highlight, // 启用文本高亮功能
-    // 配置图片扩展
     Image.configure({
       inline: false, // 图片独占一行
       allowBase64: true, // 允许 base64 图片
@@ -610,6 +610,26 @@ const editor = useEditor({
         rel: 'noopener noreferrer', // 安全属性
       },
     }),
+    Color, // 添加颜色支持
+    // 修改 Highlight 配置并添加日志
+    Highlight.configure({
+      multicolor: true,  // 启用多色高亮
+      HTMLAttributes: {
+        class: 'highlight-text'  // 添加自定义类名
+      },
+      onBeforeCreate({ editor }) {
+        console.log('Highlight 扩展初始化前')
+      },
+      onCreate({ editor }) {
+        console.log('Highlight 扩展初始化完成')
+      },
+      onUpdate({ editor }) {
+        console.log('Highlight 内容更新:', {
+          activeHighlight: editor.isActive('highlight'),
+          highlightAttrs: editor.getAttributes('highlight')
+        })
+      }
+    }),
   ],
   content: '<p>开始编辑吧!</p>', // 编辑器初始内容
   autofocus: true, // 自动获取焦点
@@ -620,7 +640,7 @@ const editor = useEditor({
     // 添加链接点击事件监听
     editor.view.dom.addEventListener('click', handleLinkClick)
     editor.view.dom.addEventListener('mouseover', handleLinkHover)
-    editor.view.dom.addEventListener('mouseout', handleLinkLeave)
+    editor.view.dom.addEventListener('mouseout', handlePopoverLeave)
   },
   onUpdate: ({ editor }) => {
     console.log('编辑器内容更新:', {
@@ -641,20 +661,20 @@ const editor = useEditor({
       type: item.type,
       kind: item.kind
     })))
-    
+
     const imageItem = items.find(item => item.type.startsWith('image'))
     if (imageItem) {
       console.log('发现图片内容:', imageItem.type)
       event.preventDefault()
       const file = imageItem.getAsFile()
-      
+
       if (file) {
         console.log('获取到图片文件:', {
           name: file.name,
           type: file.type,
           size: file.size
         })
-        
+
         const reader = new FileReader()
         reader.onload = (e) => {
           console.log('图片文件读取完成')
@@ -690,10 +710,10 @@ const editor = useEditor({
   onDestroy: ({ editor }) => {
     console.log('编辑器销毁')
     editor.view.dom?.removeEventListener('contextmenu', handleImageContextMenu)
-    // 移除链接点击事件监听
+    // 链接点击事监听
     editor.view.dom?.removeEventListener('click', handleLinkClick)
     editor.view.dom?.removeEventListener('mouseover', handleLinkHover)
-    editor.view.dom?.removeEventListener('mouseout', handleLinkLeave)
+    editor.view.dom?.removeEventListener('mouseout', handlePopoverLeave)
   }
 })
 
@@ -740,7 +760,8 @@ onBeforeUnmount(() => {
 :deep(.ProseMirror h1.heading) {
   font-size: 2em;
   margin: 0.67em 0;
-  text-align: left !important; /* 强制左对齐 */
+  text-align: left !important;
+  /* 强制左对齐 */
 }
 
 :deep(.ProseMirror h2.heading) {
@@ -796,10 +817,13 @@ onBeforeUnmount(() => {
 
 /* 修改链接样式 */
 :deep(.ProseMirror .custom-link) {
-  color: #1890ff !important; /* 默认蓝色，使用 !important 确保优先级 */
-  text-decoration: underline; /* 下划线 */
+  color: #1890ff !important;
+  /* 默认蓝色，使用 !important 确保优先级 */
+  text-decoration: underline;
+  /* 下划线 */
   cursor: pointer;
-  transition: color 0.3s; /* 添加颜色过渡效果 */
+  transition: color 0.3s;
+  /* 添加颜色过渡效果 */
 }
 
 :deep(.ProseMirror .custom-link:hover) {
@@ -808,7 +832,8 @@ onBeforeUnmount(() => {
 
 /* 只在点击后变为红色 */
 :deep(.ProseMirror .custom-link[data-visited="true"]) {
-  color: #f5222d !important; /* 点击后变红色 */
+  color: #f5222d !important;
+  /* 点击后变红色 */
 }
 
 /* 添加链接气泡样式 */
@@ -838,4 +863,21 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
 }
-</style> 
+
+/* 修改高亮样式 */
+:deep(.ProseMirror mark) {
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+:deep(.ProseMirror .highlight-text) {
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* 修改按钮组样式 */
+.color-button-group {
+  width: 80px;
+  /* 设置按钮组宽度 */
+}
+</style>

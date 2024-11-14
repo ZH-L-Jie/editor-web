@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/extension-color": "^2.9.1",
     "@tiptap/extension-highlight": "^2.2.4",
     "@tiptap/extension-image": "^2.2.4",
     "@tiptap/extension-link": "^2.9.1",
@@ -16,7 +17,7 @@
     "@tiptap/pm": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
     "@tiptap/vue-3": "^2.2.4",
-    "@vicons/fluent": "^0.12.0",
+    "@vicons/ionicons5": "^0.12.0",
     "naive-ui": "^2.38.1",
     "tiptap-editor": "file:",
     "vue": "^3.4.21",
