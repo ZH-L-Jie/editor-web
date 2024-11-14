@@ -16,6 +16,7 @@
     "@tiptap/starter-kit": "^2.2.4",
     "@tiptap/vue-3": "^2.2.4",
     "naive-ui": "^2.38.1",
+    "tiptap-editor": "file:",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
