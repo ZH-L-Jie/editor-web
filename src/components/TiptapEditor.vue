@@ -386,7 +386,10 @@ const editor = useEditor({
     // 配置StarterKit，包含基础编辑功能
     StarterKit.configure({
       heading: {
-        levels: [1, 2, 3, 4, 5, 6] // 支持6级标题
+        levels: [1, 2, 3, 4, 5, 6],
+        HTMLAttributes: {
+          class: 'heading',
+        }
       }
     }),
     // 配置文本对齐功能
@@ -523,17 +526,18 @@ onBeforeUnmount(() => {
 }
 
 /* 标题样式 */
-:deep(.ProseMirror h1) {
+:deep(.ProseMirror h1.heading) {
   font-size: 2em;
   margin: 0.67em 0;
+  text-align: left !important; /* 强制左对齐 */
 }
 
-:deep(.ProseMirror h2) {
+:deep(.ProseMirror h2.heading) {
   font-size: 1.5em;
   margin: 0.75em 0;
 }
 
-:deep(.ProseMirror h3) {
+:deep(.ProseMirror h3.heading) {
   font-size: 1.17em;
   margin: 0.83em 0;
 }
