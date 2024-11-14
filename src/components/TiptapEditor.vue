@@ -177,17 +177,17 @@ const customSize = ref(100)
 // 存储当前处理的图片
 const currentImage = ref(null)
 
-// 添加链接气泡相关的状态
-const showLinkPopover = ref(false)
-const popoverX = ref(0)
-const popoverY = ref(0)
-const linkText = ref('')
-const linkUrl = ref('')
-const currentLink = ref(null)
+// 链接相关状态
+const showLinkPopover = ref(false) // 控制链接编辑气泡的显示
+const popoverX = ref(0) // 气泡X坐标
+const popoverY = ref(0) // 气泡Y坐标
+const linkText = ref('') // 链接文本
+const linkUrl = ref('') // 链接URL
+const currentLink = ref(null) // 当前编辑的链接元素
 
-// 添加定时器引用
-const hoverTimer = ref(null)
-const leaveTimer = ref(null)
+// 定时器引用
+const hoverTimer = ref(null) // 控制悬停延迟显示
+const leaveTimer = ref(null) // 控制离开延迟隐藏
 
 // 更新图片尺寸选项，启用自定义选项
 const imageMenuOptions = [
@@ -473,31 +473,31 @@ const handleLinkClick = (event) => {
   }
 }
 
-// 修改处理链接悬停函数
+// 处理链接悬停事件
 const handleLinkHover = (event) => {
   const link = event.target.closest('a')
   if (link) {
-    // 清除已有的定时器
+    // 清除已有的定时���
     if (hoverTimer.value) clearTimeout(hoverTimer.value)
     if (leaveTimer.value) clearTimeout(leaveTimer.value)
     
-    // 设置1秒后显示气泡（从2秒改为1秒）
+    // 设置1秒后显示气泡
     hoverTimer.value = setTimeout(() => {
       currentLink.value = link
-      linkText.value = link.textContent
-      linkUrl.value = link.getAttribute('href')
+      linkText.value = link.textContent // 获取当前链接文本
+      linkUrl.value = link.getAttribute('href') // 获取当前链接URL
       
-      // 计算气泡位置
+      // 计算气泡显示位置
       const rect = link.getBoundingClientRect()
       popoverX.value = rect.left
       popoverY.value = rect.bottom + window.scrollY
       
       showLinkPopover.value = true
-    }, 1000) // 从2000改为1000，即1秒延迟
+    }, 1000) // 1秒延迟
   }
 }
 
-// 修改处理链接离开函数
+// 处理链接离开事件
 const handleLinkLeave = (event) => {
   // 清除悬停定时器
   if (hoverTimer.value) {
@@ -505,12 +505,12 @@ const handleLinkLeave = (event) => {
     hoverTimer.value = null
   }
 
-  // 如果鼠标移动到气泡上，不关闭气泡
+  // 检查是否移动到气泡上
   const isMovingToPopover = event.relatedTarget?.closest('.link-popover')
   if (!isMovingToPopover) {
     // 设置1秒后关闭气泡
     leaveTimer.value = setTimeout(() => {
-      // 检查是否正在编辑
+      // 检查是否正在编辑（焦点在输入框中）
       const isEditing = document.activeElement?.closest('.link-popover')
       if (!isEditing) {
         showLinkPopover.value = false
@@ -520,25 +520,9 @@ const handleLinkLeave = (event) => {
   }
 }
 
-// 修改气泡离开处理函数
-const handlePopoverLeave = (event) => {
-  // 检查是否移动到链接上
-  const isMovingToLink = event.relatedTarget?.closest('a')
-  if (!isMovingToLink) {
-    // 检查是否正在编辑
-    const isEditing = document.activeElement?.closest('.link-popover')
-    if (!isEditing) {
-      leaveTimer.value = setTimeout(() => {
-        showLinkPopover.value = false
-        currentLink.value = null
-      }, 1000)
-    }
-  }
-}
-
-// 添加输入框焦点处理函数
+// 处理输入框获得焦点
 const handleInputFocus = () => {
-  // 清除所有关闭定时器
+  // 清除关闭定时器，保持气泡显示
   if (leaveTimer.value) {
     clearTimeout(leaveTimer.value)
     leaveTimer.value = null
@@ -554,13 +538,13 @@ const handlePopoverEnter = () => {
   }
 }
 
-// 更新链接
+// 更新链接内容
 const updateLink = () => {
   if (currentLink.value && linkUrl.value) {
     try {
-      new URL(linkUrl.value) // 验证URL
-      currentLink.value.setAttribute('href', linkUrl.value)
-      currentLink.value.textContent = linkText.value
+      new URL(linkUrl.value) // 验证URL格式
+      currentLink.value.setAttribute('href', linkUrl.value) // 更新URL
+      currentLink.value.textContent = linkText.value // 更新文本
       showLinkPopover.value = false
     } catch {
       window.$message.error('请输入有效的URL地址')
@@ -571,13 +555,23 @@ const updateLink = () => {
 // 移除链接
 const removeLink = () => {
   if (currentLink.value) {
-    const text = currentLink.value.textContent
+    const text = currentLink.value.textContent // 保存链接文本
     const parent = currentLink.value.parentNode
-    const textNode = document.createTextNode(text)
-    parent.replaceChild(textNode, currentLink.value)
+    const textNode = document.createTextNode(text) // 创建文本节点
+    parent.replaceChild(textNode, currentLink.value) // 替换链接为纯文本
     showLinkPopover.value = false
   }
 }
+
+// 链接扩展配置
+Link.configure({
+  openOnClick: true, // 点击时打开链接
+  HTMLAttributes: {
+    class: 'custom-link', // 自定义样式类名
+    target: '_blank', // 在新标签页打开
+    rel: 'noopener noreferrer', // 安全属性
+  },
+})
 
 // 初始化Tiptap编辑器
 const editor = useEditor({
