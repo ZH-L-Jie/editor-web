@@ -52,6 +52,16 @@
           <n-button>插入图片</n-button>
         </n-upload>
       </n-button-group>
+
+      <!-- 添加链接按钮组 -->
+      <n-button-group>
+        <n-button 
+          @click="handleLink"
+          :type="editor.isActive('link') ? 'primary' : 'default'"
+        >
+          链接
+        </n-button>
+      </n-button-group>
     </div>
     
     <!-- 编辑器内容区域 -->
@@ -106,6 +116,7 @@ import StarterKit from '@tiptap/starter-kit' // Tiptap基础功能包
 import TextAlign from '@tiptap/extension-text-align' // 文本对齐扩展
 import Highlight from '@tiptap/extension-highlight' // 文本高亮扩展
 import Image from '@tiptap/extension-image' // 图片扩展
+import Link from '@tiptap/extension-link' // 添加链接扩展导入
 import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText } from 'naive-ui' // Naive UI组件
 import { onBeforeUnmount } from 'vue' // Vue生命周期钩子
 import { TextSelection } from '@tiptap/pm/state' // 添加这行导入
@@ -237,7 +248,7 @@ const handleImageUpload = (data) => {
         .run()
 
       console.log('图片插入完成')
-      window.$message.success('图片插入成功')
+      window.$message.success('片插入成功')
     } catch (error) {
       console.error('插入图片时出错:', error)
       console.error('错误堆栈:', error.stack)
@@ -379,6 +390,34 @@ const handleClickOutside = () => {
   closeImageMenu()
 }
 
+// 添加链接处理函数
+const handleLink = () => {
+  // 获取剪贴板内容
+  navigator.clipboard.readText().then(url => {
+    // 检查是否是有效的URL
+    try {
+      new URL(url)
+      // 如果是有效的URL，设置链接
+      editor.value.chain()
+        .focus()
+        .setLink({ href: url })
+        .run()
+    } catch {
+      window.$message.error('请复制有效的URL地址')
+    }
+  }).catch(() => {
+    window.$message.error('无法读取剪贴板内容')
+  })
+}
+
+// 添加链接点击处理函数
+const handleLinkClick = (event) => {
+  const link = event.target.closest('a')
+  if (link) {
+    link.setAttribute('data-visited', 'true')
+  }
+}
+
 // 初始化Tiptap编辑器
 const editor = useEditor({
   // 配置编辑器扩展
@@ -407,6 +446,15 @@ const editor = useEditor({
         draggable: false // 禁用拖拽
       },
     }),
+    // 修改链接扩展配置
+    Link.configure({
+      openOnClick: true,
+      HTMLAttributes: {
+        class: 'custom-link',
+        target: '_blank', // 在新标签页打开
+        rel: 'noopener noreferrer', // 安全属性
+      },
+    }),
   ],
   content: '<p>开始编辑吧!</p>', // 编辑器初始内容
   autofocus: true, // 自动获取焦点
@@ -414,6 +462,8 @@ const editor = useEditor({
   onCreate: ({ editor }) => {
     console.log('编辑器创建完成')
     editor.view.dom.addEventListener('contextmenu', handleImageContextMenu)
+    // 添加链接点击事件监听
+    editor.view.dom.addEventListener('click', handleLinkClick)
   },
   onUpdate: ({ editor }) => {
     console.log('编辑器内容更新:', {
@@ -483,6 +533,8 @@ const editor = useEditor({
   onDestroy: ({ editor }) => {
     console.log('编辑器销毁')
     editor.view.dom?.removeEventListener('contextmenu', handleImageContextMenu)
+    // 移除链接点击事件监听
+    editor.view.dom?.removeEventListener('click', handleLinkClick)
   }
 })
 
@@ -581,5 +633,22 @@ onBeforeUnmount(() => {
 /* 添加自定义尺寸对话框样式 */
 :deep(.n-input-group) {
   width: 200px;
+}
+
+/* 修改链接样式 */
+:deep(.ProseMirror .custom-link) {
+  color: #1890ff !important; /* 默认蓝色，使用 !important 确保优先级 */
+  text-decoration: underline; /* 下划线 */
+  cursor: pointer;
+  transition: color 0.3s; /* 添加颜色过渡效果 */
+}
+
+:deep(.ProseMirror .custom-link:hover) {
+  opacity: 0.8;
+}
+
+/* 只在点击后变为红色 */
+:deep(.ProseMirror .custom-link[data-visited="true"]) {
+  color: #f5222d !important; /* 点击后变红色 */
 }
 </style> 
