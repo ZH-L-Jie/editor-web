@@ -105,6 +105,48 @@
         请输入 1-500 之间的数值
       </n-text>
     </n-modal>
+
+    <!-- 修改链接编辑气泡 -->
+    <n-popover
+      v-model:show="showLinkPopover"
+      :x="popoverX"
+      :y="popoverY"
+      trigger="manual"
+      placement="bottom"
+      @mouseleave="handlePopoverLeave"
+      @mouseenter="handlePopoverEnter"
+    >
+      <div class="link-popover">
+        <n-input
+          v-model:value="linkText"
+          placeholder="链接文本"
+          size="small"
+          class="link-input"
+          @focus="handleInputFocus"
+        />
+        <n-input
+          v-model:value="linkUrl"
+          placeholder="URL地址"
+          size="small"
+          class="link-input"
+          @focus="handleInputFocus"
+        />
+        <div class="link-actions">
+          <n-button size="small" @click="updateLink" type="primary">
+            <template #icon>
+              <n-icon><CheckmarkCircle20Filled /></n-icon>
+            </template>
+            更新
+          </n-button>
+          <n-button size="small" @click="removeLink" type="error">
+            <template #icon>
+              <n-icon><Delete20Regular /></n-icon>
+            </template>
+            移除
+          </n-button>
+        </div>
+      </div>
+    </n-popover>
   </div>
 </template>
 
@@ -117,9 +159,10 @@ import TextAlign from '@tiptap/extension-text-align' // 文本对齐扩展
 import Highlight from '@tiptap/extension-highlight' // 文本高亮扩展
 import Image from '@tiptap/extension-image' // 图片扩展
 import Link from '@tiptap/extension-link' // 添加链接扩展导入
-import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText } from 'naive-ui' // Naive UI组件
+import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText, NPopover, NInput, NIcon } from 'naive-ui' // Naive UI组件
 import { onBeforeUnmount } from 'vue' // Vue生命周期钩子
 import { TextSelection } from '@tiptap/pm/state' // 添加这行导入
+import { CheckmarkCircle20Filled, Delete20Regular } from '@vicons/fluent' // 添加图标导入
 
 // 图片菜单状态
 const showImageMenu = ref(false)
@@ -133,6 +176,18 @@ const customSize = ref(100)
 
 // 存储当前处理的图片
 const currentImage = ref(null)
+
+// 添加链接气泡相关的状态
+const showLinkPopover = ref(false)
+const popoverX = ref(0)
+const popoverY = ref(0)
+const linkText = ref('')
+const linkUrl = ref('')
+const currentLink = ref(null)
+
+// 添加定时器引用
+const hoverTimer = ref(null)
+const leaveTimer = ref(null)
 
 // 更新图片尺寸选项，启用自定义选项
 const imageMenuOptions = [
@@ -418,6 +473,112 @@ const handleLinkClick = (event) => {
   }
 }
 
+// 修改处理链接悬停函数
+const handleLinkHover = (event) => {
+  const link = event.target.closest('a')
+  if (link) {
+    // 清除已有的定时器
+    if (hoverTimer.value) clearTimeout(hoverTimer.value)
+    if (leaveTimer.value) clearTimeout(leaveTimer.value)
+    
+    // 设置1秒后显示气泡（从2秒改为1秒）
+    hoverTimer.value = setTimeout(() => {
+      currentLink.value = link
+      linkText.value = link.textContent
+      linkUrl.value = link.getAttribute('href')
+      
+      // 计算气泡位置
+      const rect = link.getBoundingClientRect()
+      popoverX.value = rect.left
+      popoverY.value = rect.bottom + window.scrollY
+      
+      showLinkPopover.value = true
+    }, 1000) // 从2000改为1000，即1秒延迟
+  }
+}
+
+// 修改处理链接离开函数
+const handleLinkLeave = (event) => {
+  // 清除悬停定时器
+  if (hoverTimer.value) {
+    clearTimeout(hoverTimer.value)
+    hoverTimer.value = null
+  }
+
+  // 如果鼠标移动到气泡上，不关闭气泡
+  const isMovingToPopover = event.relatedTarget?.closest('.link-popover')
+  if (!isMovingToPopover) {
+    // 设置1秒后关闭气泡
+    leaveTimer.value = setTimeout(() => {
+      // 检查是否正在编辑
+      const isEditing = document.activeElement?.closest('.link-popover')
+      if (!isEditing) {
+        showLinkPopover.value = false
+        currentLink.value = null
+      }
+    }, 1000)
+  }
+}
+
+// 修改气泡离开处理函数
+const handlePopoverLeave = (event) => {
+  // 检查是否移动到链接上
+  const isMovingToLink = event.relatedTarget?.closest('a')
+  if (!isMovingToLink) {
+    // 检查是否正在编辑
+    const isEditing = document.activeElement?.closest('.link-popover')
+    if (!isEditing) {
+      leaveTimer.value = setTimeout(() => {
+        showLinkPopover.value = false
+        currentLink.value = null
+      }, 1000)
+    }
+  }
+}
+
+// 添加输入框焦点处理函数
+const handleInputFocus = () => {
+  // 清除所有关闭定时器
+  if (leaveTimer.value) {
+    clearTimeout(leaveTimer.value)
+    leaveTimer.value = null
+  }
+}
+
+// 添加鼠标进入气泡的处理函数
+const handlePopoverEnter = () => {
+  // 清除离开定时器
+  if (leaveTimer.value) {
+    clearTimeout(leaveTimer.value)
+    leaveTimer.value = null
+  }
+}
+
+// 更新链接
+const updateLink = () => {
+  if (currentLink.value && linkUrl.value) {
+    try {
+      new URL(linkUrl.value) // 验证URL
+      currentLink.value.setAttribute('href', linkUrl.value)
+      currentLink.value.textContent = linkText.value
+      showLinkPopover.value = false
+    } catch {
+      window.$message.error('请输入有效的URL地址')
+    }
+  }
+}
+
+// 移除链接
+const removeLink = () => {
+  if (currentLink.value) {
+    const text = currentLink.value.textContent
+    const parent = currentLink.value.parentNode
+    const textNode = document.createTextNode(text)
+    parent.replaceChild(textNode, currentLink.value)
+    showLinkPopover.value = false
+  }
+}
+
 // 初始化Tiptap编辑器
 const editor = useEditor({
   // 配置编辑器扩展
@@ -464,6 +625,8 @@ const editor = useEditor({
     editor.view.dom.addEventListener('contextmenu', handleImageContextMenu)
     // 添加链接点击事件监听
     editor.view.dom.addEventListener('click', handleLinkClick)
+    editor.view.dom.addEventListener('mouseover', handleLinkHover)
+    editor.view.dom.addEventListener('mouseout', handleLinkLeave)
   },
   onUpdate: ({ editor }) => {
     console.log('编辑器内容更新:', {
@@ -535,6 +698,8 @@ const editor = useEditor({
     editor.view.dom?.removeEventListener('contextmenu', handleImageContextMenu)
     // 移除链接点击事件监听
     editor.view.dom?.removeEventListener('click', handleLinkClick)
+    editor.view.dom?.removeEventListener('mouseover', handleLinkHover)
+    editor.view.dom?.removeEventListener('mouseout', handleLinkLeave)
   }
 })
 
@@ -650,5 +815,33 @@ onBeforeUnmount(() => {
 /* 只在点击后变为红色 */
 :deep(.ProseMirror .custom-link[data-visited="true"]) {
   color: #f5222d !important; /* 点击后变红色 */
+}
+
+/* 添加链接气泡样式 */
+.link-popover {
+  padding: 12px;
+  min-width: 250px;
+}
+
+.link-input {
+  margin-bottom: 8px;
+}
+
+.link-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.link-actions .n-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.n-icon {
+  display: flex;
+  align-items: center;
 }
 </style> 
