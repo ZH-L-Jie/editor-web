@@ -128,7 +128,7 @@
 <script setup>
 // 导入必要的依赖
 import { ref, h } from 'vue'
-import { useEditor, EditorContent } from '@tiptap/vue-3' // Tiptap核心组件
+import { useEditor, EditorContent } from '@tiptap/vue-3' // Tiptap核��组件
 import StarterKit from '@tiptap/starter-kit' // Tiptap基础功能包
 import TextAlign from '@tiptap/extension-text-align' // 文本对齐扩展
 import Highlight from '@tiptap/extension-highlight' // 文本高亮扩展
@@ -139,6 +139,7 @@ import { onBeforeUnmount } from 'vue' // Vue生命周期钩子
 import { TextSelection } from '@tiptap/pm/state' // 添加这行导入
 import { CheckmarkCircle, Close, BrushSharp } from '@vicons/ionicons5' // 使用 Naive UI 推荐的图标库
 import { Color } from '@tiptap/extension-color'
+import { CustomCodeBlock } from '../extensions/CustomCodeBlock'
 
 // 图片菜单状态
 const showImageMenu = ref(false)
@@ -279,7 +280,7 @@ const handleImageUpload = (data) => {
         .run()
 
       console.log('图片插入完成')
-      window.$message.success('片插入成功')
+      window.$message.success('片插入成���')
     } catch (error) {
       console.error('插入图片时出错:', error)
       console.error('错误堆栈:', error.stack)
@@ -325,7 +326,7 @@ const handleImageContextMenu = (event) => {
 
 // 闭图片菜单
 const closeImageMenu = () => {
-  console.log('关闭图片菜单')
+  console.log('关闭图片菜��')
   showImageMenu.value = false
   // 不清除 currentImage，因为可能还需要用于自定义尺寸
   if (!showCustomSizeModal.value) {
@@ -601,7 +602,7 @@ const editor = useEditor({
         draggable: false // 禁用拖拽
       },
     }),
-    // 修改链接扩展配置
+    // ��改链接扩展配置
     Link.configure({
       openOnClick: true,
       HTMLAttributes: {
@@ -630,6 +631,7 @@ const editor = useEditor({
         })
       }
     }),
+    CustomCodeBlock,
   ],
   content: '<p>开始编辑吧!</p>', // 编辑器初始内容
   autofocus: true, // 自动获取焦点
