@@ -55,6 +55,7 @@ lowlight.register('markdown', markdown)
  * 4. 一键复制代码功能
  */
 export const CustomCodeBlock = CodeBlockLowlight.extend({
+    name: 'custom-code-block',
   addNodeView() {
     return VueNodeViewRenderer(CodeBlockView)
   },
