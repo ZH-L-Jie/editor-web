@@ -1,127 +1,64 @@
-import { Node } from '@tiptap/core'
-import { mergeAttributes } from '@tiptap/core'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { common, createLowlight } from 'lowlight'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import CodeBlockView from '../components/CodeBlockView.vue'
 
-export interface CodeBlockOptions {
-  HTMLAttributes: Record<string, any>,
-  languageList: string[]
-}
+// 创建 lowlight 实例，用于代码语法高亮
+const lowlight = createLowlight(common)
 
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    codeBlock: {
-      setCodeBlock: (attributes?: { language: string }) => ReturnType
-      toggleCodeBlock: (attributes?: { language: string }) => ReturnType
-    }
-  }
-}
+// 导入所有支持的编程语言高亮规则
+import javascript from 'highlight.js/lib/languages/javascript'
+import typescript from 'highlight.js/lib/languages/typescript'
+import html from 'highlight.js/lib/languages/xml'
+import css from 'highlight.js/lib/languages/css'
+import python from 'highlight.js/lib/languages/python'
+import java from 'highlight.js/lib/languages/java'
+import cpp from 'highlight.js/lib/languages/cpp'
+import csharp from 'highlight.js/lib/languages/csharp'
+import go from 'highlight.js/lib/languages/go'
+import rust from 'highlight.js/lib/languages/rust'
+import php from 'highlight.js/lib/languages/php'
+import ruby from 'highlight.js/lib/languages/ruby'
+import swift from 'highlight.js/lib/languages/swift'
+import sql from 'highlight.js/lib/languages/sql'
+import bash from 'highlight.js/lib/languages/bash'
+import json from 'highlight.js/lib/languages/json'
+import yaml from 'highlight.js/lib/languages/yaml'
+import markdown from 'highlight.js/lib/languages/markdown'
 
-export const CustomCodeBlock = Node.create<CodeBlockOptions>({
-  name: 'codeBlock',
-  
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-      languageList: [
-        'javascript',
-        'typescript',
-        'html',
-        'css',
-        'python',
-        'java',
-        'c',
-        'cpp',
-        'csharp',
-        'go',
-        'rust',
-        'php',
-        'ruby',
-        'swift',
-        'kotlin',
-        'sql',
-        'shell',
-        'markdown',
-        'json',
-        'yaml',
-        'xml',
-        'bash',
-        'powershell',
-        'dockerfile',
-        'vue'
-      ],
-    }
-  },
+// 为 lowlight 注册所有支持的语言
+lowlight.register('javascript', javascript)
+lowlight.register('typescript', typescript)
+lowlight.register('html', html)
+lowlight.register('css', css)
+lowlight.register('python', python)
+lowlight.register('java', java)
+lowlight.register('cpp', cpp)
+lowlight.register('csharp', csharp)
+lowlight.register('go', go)
+lowlight.register('rust', rust)
+lowlight.register('php', php)
+lowlight.register('ruby', ruby)
+lowlight.register('swift', swift)
+lowlight.register('sql', sql)
+lowlight.register('bash', bash)
+lowlight.register('json', json)
+lowlight.register('yaml', yaml)
+lowlight.register('markdown', markdown)
 
-  addAttributes() {
-    return {
-      language: {
-        default: 'java',
-        parseHTML: element => element.getAttribute('data-language'),
-        renderHTML: attributes => ({
-          'data-language': attributes.language,
-        }),
-      },
-      'data-description': {
-        default: null,
-        parseHTML: element => element.getAttribute('data-description'),
-        renderHTML: attributes => ({
-          'data-description': attributes['data-description'],
-        }),
-      },
-    }
-  },
-
-  group: 'block',
-  content: 'text*',
-  marks: '',
-  code: true,
-  defining: true,
-
-  parseHTML() {
-    return [
-      {
-        tag: 'pre',
-        preserveWhitespace: 'full',
-      },
-    ]
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['pre', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), ['code', {}, 0]]
-  },
-
+/**
+ * 自定义代码块扩展
+ * 基于 CodeBlockLowlight 扩展，添加了以下功能：
+ * 1. 支持多种编程语言的语法高亮
+ * 2. 可选择编程语言
+ * 3. 支持代码块描述
+ * 4. 一键复制代码功能
+ */
+export const CustomCodeBlock = CodeBlockLowlight.extend({
   addNodeView() {
-    console.log('初始化代码块节点视图')
     return VueNodeViewRenderer(CodeBlockView)
   },
-
-  addCommands() {
-    return {
-      setCodeBlock:
-        attributes => ({ commands }) => {
-          console.log('设置代码块:', {
-            attributes,
-            name: this.name
-          })
-          const { language = 'plain' } = attributes || {}
-          return commands.setNode(this.name, { 
-            language,
-            'data-description': null 
-          })
-        },
-      toggleCodeBlock:
-        attributes => ({ commands }) => {
-          console.log('切换代码块:', {
-            attributes,
-            name: this.name
-          })
-          const { language = 'plain' } = attributes || {}
-          return commands.toggleNode(this.name, 'paragraph', { 
-            language,
-            'data-description': null 
-          })
-        },
-    }
-  },
+}).configure({
+  lowlight,
+  defaultLanguage: 'plain',
 }) 

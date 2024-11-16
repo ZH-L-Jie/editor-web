@@ -37,6 +37,22 @@
         </n-button>
       </n-button-group>
 
+      <!-- 添加代码块按钮组 -->
+      <n-button-group>
+        <n-button 
+          @click="editor.chain().focus().toggleCodeBlock().run()"
+          :type="editor.isActive('codeBlock') ? 'primary' : 'default'"
+          title="插入代码块"
+        >
+          <template #icon>
+            <n-icon>
+              <Code />
+            </n-icon>
+          </template>
+          代码块
+        </n-button>
+      </n-button-group>
+
       <!-- 添加图片上传按钮 -->
       <n-button-group>
         <n-upload :show-file-list="false" @change="handleImageUpload" accept=".jpg,.jpeg,.png,.gif,.webp"
@@ -128,7 +144,7 @@
 <script setup>
 // 导入必要的依赖
 import { ref, h } from 'vue'
-import { useEditor, EditorContent } from '@tiptap/vue-3' // Tiptap核��组件
+import { useEditor, EditorContent } from '@tiptap/vue-3' // Tiptap核组件
 import StarterKit from '@tiptap/starter-kit' // Tiptap基础功能包
 import TextAlign from '@tiptap/extension-text-align' // 文本对齐扩展
 import Highlight from '@tiptap/extension-highlight' // 文本高亮扩展
@@ -137,9 +153,10 @@ import Link from '@tiptap/extension-link' // 添加链接扩展导入
 import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputNumber, NInputGroup, NText, NPopover, NInput, NIcon, NColorPicker } from 'naive-ui' // Naive UI组件
 import { onBeforeUnmount } from 'vue' // Vue生命周期钩子
 import { TextSelection } from '@tiptap/pm/state' // 添加这行导入
-import { CheckmarkCircle, Close, BrushSharp } from '@vicons/ionicons5' // 使用 Naive UI 推荐的图标库
+import { CheckmarkCircle, Close, BrushSharp, Code } from '@vicons/ionicons5' // 使用 Naive UI 推荐的图标库
 import { Color } from '@tiptap/extension-color'
 import { CustomCodeBlock } from '../extensions/CustomCodeBlock'
+import 'highlight.js/styles/github.css' // 使用 highlight.js 的样式
 
 // 图片菜单状态
 const showImageMenu = ref(false)
@@ -147,7 +164,7 @@ const menuX = ref(0)
 const menuY = ref(0)
 const selectedImage = ref(null)
 
-// 添加自定义尺寸相关的状态
+// 添加自定义尺寸关的状态
 const showCustomSizeModal = ref(false)
 const customSize = ref(100)
 
@@ -280,7 +297,7 @@ const handleImageUpload = (data) => {
         .run()
 
       console.log('图片插入完成')
-      window.$message.success('片插入成���')
+      window.$message.success('片插入成')
     } catch (error) {
       console.error('插入图片时出错:', error)
       console.error('错误堆栈:', error.stack)
@@ -326,7 +343,7 @@ const handleImageContextMenu = (event) => {
 
 // 闭图片菜单
 const closeImageMenu = () => {
-  console.log('关闭图片菜��')
+  console.log('关闭图片菜')
   showImageMenu.value = false
   // 不清除 currentImage，因为可能还需要用于自定义尺寸
   if (!showCustomSizeModal.value) {
@@ -602,7 +619,7 @@ const editor = useEditor({
         draggable: false // 禁用拖拽
       },
     }),
-    // ��改链接扩展配置
+    // 改链接扩展配置
     Link.configure({
       openOnClick: true,
       HTMLAttributes: {
