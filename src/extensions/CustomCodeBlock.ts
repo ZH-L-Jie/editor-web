@@ -56,7 +56,7 @@ export const CustomCodeBlock = Node.create<CodeBlockOptions>({
   addAttributes() {
     return {
       language: {
-        default: 'plain',
+        default: 'java',
         parseHTML: element => element.getAttribute('data-language'),
         renderHTML: attributes => ({
           'data-language': attributes.language,

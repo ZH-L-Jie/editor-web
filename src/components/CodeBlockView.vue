@@ -29,8 +29,10 @@
     <pre
       ref="preElement"
       class="code-block"
+    ><code 
+      ref="codeElement"
       :class="`language-${selectedLanguage}`"
-    ><code ref="codeElement"><node-view-content /></code></pre>
+    ><node-view-content /></code></pre>
   </node-view-wrapper>
 </template>
 
@@ -40,10 +42,43 @@ import { NodeViewWrapper, NodeViewContent } from '@tiptap/vue-3'
 import type { NodeViewProps } from '@tiptap/vue-3'
 import Prism from 'prismjs'
 import 'prismjs/themes/prism.css'
-import 'prismjs/components/prism-javascript'
+
+// 基础语言支持
+import 'prismjs/components/prism-markup'  // HTML/XML 支持
+import 'prismjs/components/prism-clike'   // C-like 语言基础支持
+import 'prismjs/components/prism-javascript'  // JavaScript 支持
+
+// 其他语言支持（按依赖顺序排列）
 import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-css'
 import 'prismjs/components/prism-python'
-// 导入其他语言支持...
+import 'prismjs/components/prism-java'
+import 'prismjs/components/prism-c'
+import 'prismjs/components/prism-cpp'
+import 'prismjs/components/prism-csharp'
+import 'prismjs/components/prism-go'
+import 'prismjs/components/prism-rust'
+import 'prismjs/components/prism-markup-templating'  // PHP 需要这个依赖
+import 'prismjs/components/prism-php'
+import 'prismjs/components/prism-ruby'
+import 'prismjs/components/prism-swift'
+import 'prismjs/components/prism-kotlin'
+import 'prismjs/components/prism-sql'
+import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-markdown'
+import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-yaml'
+import 'prismjs/components/prism-docker'
+import 'prismjs/components/prism-powershell'
+
+// 语言别名映射
+const languageAliases: Record<string, string> = {
+  'html': 'markup',
+  'shell': 'bash',
+  'dockerfile': 'docker',
+  'xml': 'markup',
+  'vue': 'markup'
+}
 
 const props = defineProps<{
   node: {
@@ -99,9 +134,25 @@ const updateLanguage = (event: Event) => {
     newLanguage: target.value
   })
   selectedLanguage.value = target.value
+  
+  // 更新 DOM 元素的类名
+  if (codeElement.value) {
+    // 移除旧的语言类
+    codeElement.value.classList.forEach(className => {
+      if (className.startsWith('language-')) {
+        codeElement.value?.classList.remove(className)
+      }
+    })
+    // 添加新的语言类
+    codeElement.value.classList.add(`language-${target.value}`)
+  }
+  
   props.updateAttributes({
     language: target.value,
   })
+  
+  // 重新应用高亮
+  highlightCode()
 }
 
 const updateDescription = () => {
@@ -131,37 +182,71 @@ const copyCode = async () => {
 const highlightCode = () => {
   if (codeElement.value) {
     const codeContent = codeElement.value.textContent || ''
-    console.log('执行代码高亮:', {
+    // 获取实际的语言标识符
+    const actualLanguage = languageAliases[selectedLanguage.value] || selectedLanguage.value
+    
+    console.log('执行代码高亮前:', {
       language: selectedLanguage.value,
+      actualLanguage,
       codeLength: codeContent.length,
+      rawCode: codeContent,
       beforeHighlight: {
-        code: codeContent,
-        innerHTML: codeElement.value.innerHTML
+        textContent: codeElement.value.textContent,
+        innerHTML: codeElement.value.innerHTML,
+        outerHTML: codeElement.value.outerHTML,
+        classList: Array.from(codeElement.value.classList),
+        style: codeElement.value.getAttribute('style')
       }
     })
     
     try {
+      // 确保使用正确的语言标识符
+      codeElement.value.className = `language-${actualLanguage}`
       Prism.highlightElement(codeElement.value)
       
       // 等待下一个 tick，确保高亮已经应用
       setTimeout(() => {
-        console.log('代码高亮完成:', {
-          language: selectedLanguage.value,
-          afterHighlight: {
-            code: codeElement.value?.textContent,
-            code1: codeElement.value,
-            innerHTML: codeElement.value?.innerHTML
-          }
-        })
-        Prism.highlightAll()// 全局代码高亮
-      }, 100)
+        if (codeElement.value) {
+          const highlightedTokens = Array.from(codeElement.value.children).map(node => ({
+            type: node.nodeType,
+            className: node.className,
+            textContent: node.textContent
+          }))
+
+          console.log('代码高亮完成:', {
+            language: selectedLanguage.value,
+            actualLanguage,
+            afterHighlight: {
+              textContent: codeElement.value.textContent,
+              innerHTML: codeElement.value.innerHTML,
+              outerHTML: codeElement.value.outerHTML,
+              classList: Array.from(codeElement.value.classList),
+              style: codeElement.value.getAttribute('style'),
+              tokens: highlightedTokens
+            },
+            tokenCount: highlightedTokens.length,
+            hasHighlightClasses: codeElement.value.innerHTML.includes('token')
+          })
+        }
+        
+        // 全局代码高亮
+        Prism.highlightAll()
+      }, 0)
     } catch (error) {
       console.error('代码高亮失败:', {
         error,
         language: selectedLanguage.value,
-        code: codeContent
+        actualLanguage,
+        code: codeContent,
+        element: {
+          exists: !!codeElement.value,
+          type: codeElement.value?.nodeType,
+          classList: Array.from(codeElement.value?.classList || [])
+        }
       })
     }
+  } else {
+    console.warn('代码元素不存在')
   }
 }
 
@@ -172,6 +257,7 @@ onMounted(() => {
     hasContent: Boolean(props.node.textContent)
   })
   highlightCode()
+  
 })
 
 watch(() => props.node.textContent, (newContent, oldContent) => {
@@ -250,5 +336,51 @@ watch(() => selectedLanguage.value, (newLang, oldLang) => {
   font-family: 'Fira Code', monospace;
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* 添加全局样式以确保代码高亮正确显示 */
+.code-block pre {
+  background: #f5f5f5;
+  padding: 1em;
+  margin: .5em 0;
+  overflow: auto;
+  border-radius: 4px;
+}
+
+/* Prism.js 默认主题的一些重要样式 */
+:deep(.token.comment),
+:deep(.token.prolog),
+:deep(.token.doctype),
+:deep(.token.cdata) {
+  color: #998;
+  font-style: italic;
+}
+
+:deep(.token.function) {
+  color: #dd4a68;
+}
+
+:deep(.token.keyword) {
+  color: #07a;
+}
+
+:deep(.token.string) {
+  color: #690;
+}
+
+:deep(.token.number) {
+  color: #905;
+}
+
+:deep(.token.operator) {
+  color: #9a6e3a;
+}
+
+:deep(.token.class-name) {
+  color: #dd4a68;
+}
+
+:deep(.token.property) {
+  color: #905;
 }
 </style> 
