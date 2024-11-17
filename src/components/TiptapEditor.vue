@@ -256,13 +256,18 @@ const editor = useEditor({
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') {
-          return '请输入标题...'
+          return '标题'
+        }
+        if (node.type.name === 'paragraph') {
+          return '请输入正文内容...'
         }
         return '请输入正文内容...'
       },
       includeChildren: true,
       showOnlyCurrent: true,
       showOnlyWhenEditable: true,
+      emptyNodeClass: 'is-empty',
+      emptyEditorClass: 'is-editor-empty',
     }),
   ],
   content: '',
@@ -869,6 +874,50 @@ const logWarning = (message: string, data?: any) => {
   ul[data-type="taskList"] li>div>p {
     margin: 0;
     line-height: 1.4;
+  }
+}
+
+/* 修改占位符样式 */
+:deep(.ProseMirror) {
+
+  /* 所有空节点的基础样式 */
+  .is-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #adb5bd;
+    pointer-events: none;
+    height: 0;
+    font-style: italic;
+  }
+
+  /* 标题的占位符样式 */
+  h1.is-empty::before,
+  h2.is-empty::before,
+  h3.is-empty::before,
+  h4.is-empty::before,
+  h5.is-empty::before,
+  h6.is-empty::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: none;
+    height: 0;
+    pointer-events: none;
+    font-style: italic;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+  }
+
+  /* 段落的占位符样式 */
+  p.is-empty::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    font-style: italic;
   }
 }
 </style>
