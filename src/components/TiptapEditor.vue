@@ -40,9 +40,12 @@
           <!-- 标题组 -->
           <div class="button-group">
             <n-button-group>
-              <n-button v-for="level in [1, 2, 3]" :key="level"
-                @click="editor.chain().focus().toggleHeading({ level }).run()"
-                :type="editor.isActive('heading', { level }) ? 'primary' : 'default'">
+              <n-button 
+                v-for="level in [1, 2, 3, 4, 5, 6]" 
+                :key="level"
+                @click="editor.chain().focus().toggleHeading({ level: level as Level }).run()"
+                :type="editor.isActive('heading', { level }) ? 'primary' : 'default'"
+              >
                 H{{ level }}
               </n-button>
             </n-button-group>
