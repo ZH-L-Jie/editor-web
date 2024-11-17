@@ -101,13 +101,13 @@
 
           <!-- 高亮按钮组 -->
           <div class="button-group color-button-group">
-            <n-color-picker :show-alpha="false" :actions="['confirm','clear']" default-value="#18A058" :swatches="[
-                '#FFFFFF',
-                '#18A058',
-                '#2080F0',
-                '#F0A020',
-                'rgba(208, 48, 80, 1)'
-              ]" @confirm="setHighlight" @clear="editor.chain().focus().unsetHighlight().run()">
+            <n-color-picker :show-alpha="false" :actions="['confirm', 'clear']" default-value="#18A058" :swatches="[
+              '#FFFFFF',
+              '#18A058',
+              '#2080F0',
+              '#F0A020',
+              'rgba(208, 48, 80, 1)'
+            ]" @confirm="setHighlight" @clear="editor.chain().focus().unsetHighlight().run()">
             </n-color-picker>
           </div>
         </div>
@@ -177,7 +177,7 @@ const imageMenuOptions = [
 
 const setHighlight = (color) => {
   if (!editor.value) return
-  
+
   const { from, to } = editor.value.state.selection
   if (from === to) {
     window.$message.warning('请先选择要高亮的文本')
@@ -483,17 +483,21 @@ const insertHorizontalRule = () => {
   }
 
   pre {
-    background: #0D0D0D;
-    color: #FFF;
+    background: #f6f8fa;
+    color: #24292e;
     font-family: 'JetBrainsMono', monospace;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
 
     code {
       color: inherit;
       padding: 0;
       background: none;
-      font-size: 0.8rem;
+      font-size: 0.875rem;
+      font-family: inherit;
+      tab-size: 4;
     }
   }
 
