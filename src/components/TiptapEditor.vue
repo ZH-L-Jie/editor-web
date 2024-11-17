@@ -40,12 +40,9 @@
           <!-- 标题组 -->
           <div class="button-group">
             <n-button-group>
-              <n-button 
-                v-for="level in [1, 2, 3, 4, 5, 6]" 
-                :key="level"
+              <n-button v-for="level in [1, 2, 3, 4, 5, 6]" :key="level"
                 @click="editor.chain().focus().toggleHeading({ level: level as Level }).run()"
-                :type="editor.isActive('heading', { level }) ? 'primary' : 'default'"
-              >
+                :type="editor.isActive('heading', { level }) ? 'primary' : 'default'">
                 H{{ level }}
               </n-button>
             </n-button-group>
@@ -61,6 +58,10 @@
               <n-button @click="editor.chain().focus().toggleOrderedList().run()"
                 :type="editor.isActive('orderedList') ? 'primary' : 'default'">
                 有序列表
+              </n-button>
+              <n-button @click="editor.chain().focus().toggleTaskList().run()"
+                :type="editor.isActive('taskList') ? 'primary' : 'default'">
+                任务列表
               </n-button>
             </n-button-group>
           </div>
@@ -118,11 +119,7 @@
           <div class="button-group">
             <n-button-group>
               <n-button @click="exportDocument">导出文档</n-button>
-              <n-upload
-                :show-file-list="false"
-                accept=".json"
-                @change="importDocument"
-              >
+              <n-upload :show-file-list="false" accept=".json" @change="importDocument">
                 <n-button>导入文档</n-button>
               </n-upload>
             </n-button-group>
@@ -150,15 +147,8 @@
     </n-modal>
 
     <!-- 添加引用块右键菜单 -->
-    <n-dropdown 
-      :show="showBlockquoteMenu" 
-      :options="blockquoteMenuOptions" 
-      :x="menuX" 
-      :y="menuY" 
-      placement="bottom-start"
-      @select="handleBlockquoteType" 
-      @clickoutside="closeBlockquoteMenu" 
-    />
+    <n-dropdown :show="showBlockquoteMenu" :options="blockquoteMenuOptions" :x="menuX" :y="menuY"
+      placement="bottom-start" @select="handleBlockquoteType" @clickoutside="closeBlockquoteMenu" />
   </div>
 </template>
 
@@ -181,10 +171,8 @@ import {
 import Placeholder from '@tiptap/extension-placeholder'
 import Document from '@tiptap/extension-document'
 import { DocumentHelper } from '../utils/documentHelper'
+import { CustomTaskList, CustomTaskItem } from '../extensions/CustomTaskList'
 
-const CustomDocument2 = Document.extend({
-  content: 'heading block*',
-})
 
 const showImageMenu = ref(false)
 const menuX = ref(0)
@@ -236,15 +224,22 @@ const editor = useEditor({
       orderedList: false,
       blockquote: false,
       codeBlock: false,
-      history: true,
+      history: {
+        depth: 100,
+        newGroupDelay: 500
+      },
     }),
-    CustomDocument2,
+    CustomDocument,
     CustomHeading,
     CustomParagraph,
     CustomBulletList,
     CustomOrderedList,
     CustomBlockquote,
     CustomCodeBlock,
+    CustomTaskList,
+    CustomTaskItem.configure({
+      nested: true,
+    }),
     Highlight.configure({
       multicolor: true,
       HTMLAttributes: {
@@ -274,22 +269,28 @@ const editor = useEditor({
   autofocus: true,
   editable: true,
   onCreate: ({ editor }) => {
+    logInfo('编辑器创建')
     editor.view.dom.addEventListener('contextmenu', handleImageContextMenu)
   },
-  onDestroy: ({ editor }) => {
-    editor.view.dom?.removeEventListener('contextmenu', handleImageContextMenu)
-  }
+
 })
 
 const beforeUpload = (data) => {
   const file = data.file
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+
+  logInfo('检查上传文件', {
+    name: file.name,
+    type: file.type,
+    size: file.size
+  })
+
   if (!allowedTypes.includes(file.type)) {
-    window.$message.error('只能上传 JPG、PNG、GIF 或 WebP 格式的图片')
+    logWarning('文件类型不支持', { type: file.type })
     return false
   }
   if (file.size > 2 * 1024 * 1024) {
-    window.$message.error('图片大小不能超过 2MB')
+    logWarning('文件大小超限', { size: file.size })
     return false
   }
   return true
@@ -297,14 +298,27 @@ const beforeUpload = (data) => {
 
 const handleImageUpload = (data) => {
   const { file } = data
-  if (!file) return
+  if (!file) {
+    logWarning('上传文件为空')
+    return
+  }
+
+  logInfo('开始上传图片', { name: file.file.name, size: file.file.size })
 
   const reader = new FileReader()
   reader.onload = (e) => {
-    editor.value.chain()
-      .focus()
-      .setImage({ src: e.target.result })
-      .run()
+    try {
+      editor.value?.chain()
+        .focus()
+        .setImage({ src: e.target.result })
+        .run()
+      logInfo('图片上传成功')
+    } catch (error) {
+      logError('图片插入失败', error)
+    }
+  }
+  reader.onerror = (error) => {
+    logError('图片读取失败', error)
   }
   reader.readAsDataURL(file.file)
 }
@@ -330,6 +344,8 @@ const closeImageMenu = () => {
 }
 
 const handleImageResize = (size) => {
+  logInfo('调整图片大小', { size })
+
   if (size === 'custom') {
     currentImage.value = selectedImage.value
     showCustomSizeModal.value = true
@@ -337,14 +353,22 @@ const handleImageResize = (size) => {
     return
   }
 
-  if (!selectedImage.value) return
+  if (!selectedImage.value) {
+    logWarning('未选择图片')
+    return
+  }
 
-  const originalWidth = selectedImage.value.naturalWidth
-  const sizeValue = parseInt(size)
-  const newWidth = (originalWidth * sizeValue) / 100
+  try {
+    const originalWidth = selectedImage.value.naturalWidth
+    const sizeValue = parseInt(size)
+    const newWidth = (originalWidth * sizeValue) / 100
 
-  selectedImage.value.style.width = `${newWidth}px`
-  selectedImage.value.style.height = 'auto'
+    selectedImage.value.style.width = `${newWidth}px`
+    selectedImage.value.style.height = 'auto'
+    logInfo('图片大小调整成功', { width: newWidth })
+  } catch (error) {
+    logError('图片大小调整失败', error)
+  }
 
   showImageMenu.value = false
   selectedImage.value = null
@@ -391,32 +415,59 @@ const documentHelper = ref<DocumentHelper | null>(null)
 
 // 在编辑器创建后初始化 DocumentHelper
 onMounted(() => {
+  logInfo('编辑器初始化')
   if (editor.value) {
     documentHelper.value = new DocumentHelper(editor.value, window.$message)
+    editor.value.view.dom.addEventListener('contextmenu', handleImageContextMenu)
+    logInfo('编辑器事件监听器已添加')
   }
 })
 
 // 导出文档
 const exportDocument = () => {
-  documentHelper.value?.exportDocument('my-document')
+  logInfo('开始导出文档')
+  try {
+    documentHelper.value?.exportDocument('my-document')
+    logInfo('文档导出成功')
+  } catch (error) {
+    logError('文档导出失败', error)
+  }
 }
 
 // 导入文档
 const importDocument = async (data) => {
   const { file } = data
   if (file) {
-    await documentHelper.value?.importDocument(file.file)
+    logInfo('开始导入文档', { name: file.file.name })
+    try {
+      await documentHelper.value?.importDocument(file.file)
+      logInfo('文档导入成功')
+    } catch (error) {
+      logError('文档导入失败', error)
+    }
   }
 }
 
 // 从 API 加载文档
 const loadDocumentFromApi = async (documentId: string) => {
-  await documentHelper.value?.loadFromApi(documentId, '/api')
+  logInfo('开始从API加载文档', { documentId })
+  try {
+    await documentHelper.value?.loadFromApi(documentId, '/api')
+    logInfo('API文档加载成功')
+  } catch (error) {
+    logError('API文档加载失败', error)
+  }
 }
 
 // 保存文档到 API
 const saveDocumentToApi = async (documentId: string) => {
-  await documentHelper.value?.saveToApi(documentId, '/api')
+  logInfo('开始保存文档到API', { documentId })
+  try {
+    await documentHelper.value?.saveToApi(documentId, '/api')
+    logInfo('API文档保存成功')
+  } catch (error) {
+    logError('API文档保存失败', error)
+  }
 }
 
 // 导出方法供外部使用
@@ -484,10 +535,27 @@ onMounted(() => {
 
 // 在编辑器销毁时移除事件监听
 onBeforeUnmount(() => {
+  logInfo('编辑器准备销毁')
   if (editor.value) {
     editor.value.view.dom.removeEventListener('contextmenu', handleBlockquoteContextMenu)
+    logInfo('编辑器事件监听器已移除')
   }
 })
+
+// 添加日志工具函数
+const logInfo = (message: string, data?: any) => {
+  console.info(`[TiptapEditor] ${message}`, data || '')
+}
+
+const logError = (message: string, error: any) => {
+  console.error(`[TiptapEditor] ${message}:`, error)
+  window.$message?.error(message)
+}
+
+const logWarning = (message: string, data?: any) => {
+  console.warn(`[TiptapEditor] ${message}`, data || '')
+  window.$message?.warning(message)
+}
 </script>
 
 <style scoped>
@@ -749,6 +817,58 @@ onBeforeUnmount(() => {
     background-color: #ffebee;
     border-left-color: #f44336;
     color: #c62828;
+  }
+}
+
+/* 添加任务列表样式 */
+:deep(.ProseMirror) {
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      margin: 0.5em 0;
+
+      >label {
+        flex: 0 0 auto;
+        margin-right: 0.5rem;
+        user-select: none;
+        cursor: pointer;
+      }
+
+      >div {
+        flex: 1 1 auto;
+        margin-top: 0.1em;
+        /* 微调文本位置，使其与复选框对齐 */
+      }
+
+      input[type="checkbox"] {
+        cursor: pointer;
+        margin: 0.2em 0.5em 0 0;
+        /* 调整复选框位置 */
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  /* 务列表项样式 */
+  .custom-task-item {
+    &[data-checked="true"] {
+      >div>p {
+        color: #999;
+        text-decoration: line-through;
+        text-decoration-thickness: 2px;
+      }
+    }
+  }
+
+  /* 确保任务列表内的段落没有多余的边距 */
+  ul[data-type="taskList"] li>div>p {
+    margin: 0;
+    line-height: 1.4;
   }
 }
 </style>
