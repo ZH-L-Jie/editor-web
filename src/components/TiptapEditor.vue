@@ -110,6 +110,20 @@
             ]" @confirm="setHighlight" @clear="editor.chain().focus().unsetHighlight().run()">
             </n-color-picker>
           </div>
+
+          <!-- 添加导入导出按钮组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="exportDocument">导出文档</n-button>
+              <n-upload
+                :show-file-list="false"
+                accept=".json"
+                @change="importDocument"
+              >
+                <n-button>导入文档</n-button>
+              </n-upload>
+            </n-button-group>
+          </div>
         </div>
       </div>
 
@@ -134,8 +148,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -152,6 +166,7 @@ import {
 } from '../extensions'
 import Placeholder from '@tiptap/extension-placeholder'
 import Document from '@tiptap/extension-document'
+import { DocumentHelper } from '../utils/documentHelper'
 
 const CustomDocument2 = Document.extend({
   content: 'heading block*',
@@ -356,6 +371,47 @@ const insertHorizontalRule = () => {
       .run()
   }, 0)
 }
+
+// 创建 DocumentHelper 实例
+const documentHelper = ref<DocumentHelper | null>(null)
+
+// 在编辑器创建后初始化 DocumentHelper
+onMounted(() => {
+  if (editor.value) {
+    documentHelper.value = new DocumentHelper(editor.value, window.$message)
+  }
+})
+
+// 导出文档
+const exportDocument = () => {
+  documentHelper.value?.exportDocument('my-document')
+}
+
+// 导入文档
+const importDocument = async (data) => {
+  const { file } = data
+  if (file) {
+    await documentHelper.value?.importDocument(file.file)
+  }
+}
+
+// 从 API 加载文档
+const loadDocumentFromApi = async (documentId: string) => {
+  await documentHelper.value?.loadFromApi(documentId, '/api')
+}
+
+// 保存文档到 API
+const saveDocumentToApi = async (documentId: string) => {
+  await documentHelper.value?.saveToApi(documentId, '/api')
+}
+
+// 导出方法供外部使用
+defineExpose({
+  loadDocumentFromApi,
+  saveDocumentToApi,
+  exportDocument,
+  importDocument,
+})
 </script>
 
 <style scoped>

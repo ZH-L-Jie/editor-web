@@ -47,6 +47,14 @@ lowlight.register('json', json)
 lowlight.register('yaml', yaml)
 lowlight.register('markdown', markdown)
 
+/**
+ * 自定义代码块扩展
+ * 基于 CodeBlockLowlight 扩展，添加了以下功能：
+ * 1. 语言选择
+ * 2. 语法高亮
+ * 3. 代码复制
+ * 4. 描述标注
+ */
 export const CustomCodeBlock = CodeBlockLowlight.extend({
   name: 'codeBlock',
 
