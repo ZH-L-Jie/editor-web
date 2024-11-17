@@ -148,11 +148,22 @@
         </n-button-group>
       </n-input-group>
     </n-modal>
+
+    <!-- 添加引用块右键菜单 -->
+    <n-dropdown 
+      :show="showBlockquoteMenu" 
+      :options="blockquoteMenuOptions" 
+      :x="menuX" 
+      :y="menuY" 
+      placement="bottom-start"
+      @select="handleBlockquoteType" 
+      @clickoutside="closeBlockquoteMenu" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -415,6 +426,68 @@ defineExpose({
   exportDocument,
   importDocument,
 })
+
+// 引用块菜单状态
+const showBlockquoteMenu = ref(false)
+const blockquoteMenuOptions = [
+  {
+    label: '默认样式',
+    key: 'default',
+  },
+  {
+    label: '信息提示',
+    key: 'info',
+  },
+  {
+    label: '成功提示',
+    key: 'success',
+  },
+  {
+    label: '警告提示',
+    key: 'warning',
+  },
+  {
+    label: '错误提示',
+    key: 'error',
+  },
+]
+
+// 处理引用块右键菜单
+const handleBlockquoteContextMenu = (event: MouseEvent) => {
+  const element = event.target as HTMLElement
+  const blockquote = element.closest('blockquote')
+  if (blockquote) {
+    event.preventDefault()
+    showBlockquoteMenu.value = true
+    menuX.value = event.clientX
+    menuY.value = event.clientY
+  }
+}
+
+// 处理引用块类型选择
+const handleBlockquoteType = (type: string) => {
+  editor.value?.chain().focus().setBlockquoteType(type).run()
+  showBlockquoteMenu.value = false
+}
+
+// 关闭引用块菜单
+const closeBlockquoteMenu = () => {
+  showBlockquoteMenu.value = false
+}
+
+// 在编辑器创建时添加事件监听
+onMounted(() => {
+  if (editor.value) {
+    editor.value.view.dom.addEventListener('contextmenu', handleBlockquoteContextMenu)
+  }
+})
+
+// 在编辑器销毁时移除事件监听
+onBeforeUnmount(() => {
+  if (editor.value) {
+    editor.value.view.dom.removeEventListener('contextmenu', handleBlockquoteContextMenu)
+  }
+})
 </script>
 
 <style scoped>
@@ -631,5 +704,51 @@ defineExpose({
 /* 修改颜色选择器按钮组样式 */
 .color-button-group {
   width: 80px;
+}
+
+/* 引用块样式 */
+:deep(.ProseMirror) {
+  blockquote {
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border-left-width: 4px;
+    border-left-style: solid;
+  }
+
+  /* 默认样式 */
+  blockquote[data-type="default"] {
+    background-color: #f3f4f6;
+    border-left-color: #9ca3af;
+    color: #4b5563;
+  }
+
+  /* 信息样式 */
+  blockquote[data-type="info"] {
+    background-color: #e1f5fe;
+    border-left-color: #03a9f4;
+    color: #0277bd;
+  }
+
+  /* 成功样式 */
+  blockquote[data-type="success"] {
+    background-color: #e8f5e9;
+    border-left-color: #4caf50;
+    color: #2e7d32;
+  }
+
+  /* 警告样式 */
+  blockquote[data-type="warning"] {
+    background-color: #fff3e0;
+    border-left-color: #ff9800;
+    color: #ef6c00;
+  }
+
+  /* 错误样式 */
+  blockquote[data-type="error"] {
+    background-color: #ffebee;
+    border-left-color: #f44336;
+    color: #c62828;
+  }
 }
 </style>
