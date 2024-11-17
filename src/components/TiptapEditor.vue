@@ -157,13 +157,8 @@ import { CheckmarkCircle, Close, BrushSharp, Code } from '@vicons/ionicons5' // 
 import { Color } from '@tiptap/extension-color'
 import { CustomCodeBlock } from '../extensions/CustomCodeBlock'
 import 'highlight.js/styles/github.css' // 使用 highlight.js 的样式
-import Document from '@tiptap/extension-document'
+import { CustomDocument } from '../extensions/CustomDocument'
 import Placeholder from '@tiptap/extension-placeholder'
-
-
-const CustomDocument = Document.extend({
-  content: 'heading block*',
-})
 
 // 图片菜单状态
 const showImageMenu = ref(false)
@@ -450,7 +445,7 @@ const handleClickOutside = () => {
 const handleLink = () => {
   // 获取剪贴板内容
   navigator.clipboard.readText().then(url => {
-    // 检查是否是有效的URL
+    // 检查是否是效的URL
     try {
       new URL(url)
       // 如果是有效的URL，设置链接
@@ -665,10 +660,10 @@ const editor = useEditor({
         }
         return '请输入正文内容...'
       },
-      // 指定要显示占位符的节点类型
-      includeChildren: true,
-      showOnlyCurrent: false,
-      showOnlyWhenEditable: true,
+      // 配置占位符显示规则
+      includeChildren: true, // 包含子节点
+      showOnlyCurrent: true, // 仅显示当前节点的占位符
+      showOnlyWhenEditable: true, // 即使不可编辑时也显示占位符
     }),
   ],
   content: '', // 编辑器初始内容
@@ -785,7 +780,7 @@ onBeforeUnmount(() => {
   gap: 10px;
 }
 
-/* 编辑器核心区域样式 */
+/* 编辑器核心区域样 */
 :deep(.ProseMirror) {
   outline: none;
   min-height: 200px;
