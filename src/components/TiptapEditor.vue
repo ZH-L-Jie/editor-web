@@ -98,13 +98,23 @@
               <n-button>插入图片</n-button>
             </n-upload>
           </div>
+
+          <!-- 高亮按钮组 -->
+          <div class="button-group color-button-group">
+            <n-color-picker :show-alpha="false" :actions="['confirm','clear']" default-value="#18A058" :swatches="[
+                '#FFFFFF',
+                '#18A058',
+                '#2080F0',
+                '#F0A020',
+                'rgba(208, 48, 80, 1)'
+              ]" @confirm="setHighlight" @clear="editor.chain().focus().unsetHighlight().run()">
+            </n-color-picker>
+          </div>
         </div>
       </div>
 
       <!-- 编辑器内容区 -->
-      <div class="editor-content">
-        <editor-content :editor="editor" />
-      </div>
+      <editor-content :editor="editor" class="editor-content" />
     </div>
 
     <!-- 图片菜单 -->
@@ -129,9 +139,23 @@ import { ref } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
-import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputGroup, NInputNumber } from 'naive-ui'
-import { CustomDocument } from '../extensions'
+import Highlight from '@tiptap/extension-highlight'
+import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputGroup, NInputNumber, NColorPicker } from 'naive-ui'
+import {
+  CustomDocument,
+  CustomHeading,
+  CustomParagraph,
+  CustomBulletList,
+  CustomOrderedList,
+  CustomBlockquote,
+  CustomCodeBlock,
+} from '../extensions'
 import Placeholder from '@tiptap/extension-placeholder'
+import Document from '@tiptap/extension-document'
+
+const CustomDocument2 = Document.extend({
+  content: 'heading block*',
+})
 
 const showImageMenu = ref(false)
 const menuX = ref(0)
@@ -151,15 +175,53 @@ const imageMenuOptions = [
   { label: '自定义', key: 'custom' },
 ]
 
+const setHighlight = (color) => {
+  if (!editor.value) return
+  
+  const { from, to } = editor.value.state.selection
+  if (from === to) {
+    window.$message.warning('请先选择要高亮的文本')
+    return
+  }
+
+  try {
+    editor.value.chain()
+      .focus()
+      .setHighlight({ color })
+      .setTextSelection(to)
+      .unsetHighlight()
+      .run()
+  } catch (error) {
+    console.error('设置高亮时出错:', error)
+    window.$message.error('设置高亮失败')
+  }
+}
+
 const editor = useEditor({
   extensions: [
     StarterKit.configure({
       document: false,
+      heading: false,
+      paragraph: false,
+      bulletList: false,
+      orderedList: false,
+      blockquote: false,
+      codeBlock: false,
       history: true,
-      horizontalRule: true,
-      hardBreak: true,
     }),
-    CustomDocument,
+    CustomDocument2,
+    CustomHeading,
+    CustomParagraph,
+    CustomBulletList,
+    CustomOrderedList,
+    CustomBlockquote,
+    CustomCodeBlock,
+    Highlight.configure({
+      multicolor: true,
+      HTMLAttributes: {
+        class: 'highlight-text'
+      }
+    }),
     Image.configure({
       inline: false,
       allowBase64: true,
@@ -174,7 +236,6 @@ const editor = useEditor({
         }
         return '请输入正文内容...'
       },
-      // 指定要显示占位符的节点类型
       includeChildren: true,
       showOnlyCurrent: true,
       showOnlyWhenEditable: true,
@@ -336,6 +397,7 @@ const insertHorizontalRule = () => {
 .button-group {
   display: flex;
   align-items: center;
+  /* width: 80px; */
 }
 
 .button-group :deep(.n-button) {
@@ -460,6 +522,16 @@ const insertHorizontalRule = () => {
   *+hr {
     margin-top: 1rem;
   }
+
+  mark {
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  .highlight-text {
+    border-radius: 2px;
+    padding: 0 2px;
+  }
 }
 
 :deep(.resizable-image) {
@@ -491,5 +563,10 @@ const insertHorizontalRule = () => {
 
 .editor-content::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 修改颜色选择器按钮组样式 */
+.color-button-group {
+  width: 80px;
 }
 </style>
