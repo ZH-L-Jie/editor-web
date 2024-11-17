@@ -1,135 +1,119 @@
 <template>
-  <div class="editor">
-    <div v-if="editor" class="menubar">
-      <n-button-group>
-        <n-button 
-          @click="editor.chain().focus().undo().run()"
-          :disabled="!editor.can().undo()"
-        >
-          撤销
-        </n-button>
-        <n-button 
-          @click="editor.chain().focus().redo().run()"
-          :disabled="!editor.can().redo()"
-        >
-          重做
-        </n-button>
-      </n-button-group>
+  <div class="editor-container">
+    <div class="editor">
+      <!-- 工具栏 -->
+      <div v-if="editor" class="menubar">
+        <div class="button-groups">
+          <!-- 撤销重做组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="editor.chain().focus().undo().run()" :disabled="!editor.can().undo()">
+                撤销
+              </n-button>
+              <n-button @click="editor.chain().focus().redo().run()" :disabled="!editor.can().redo()">
+                重做
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button 
-          @click="editor.chain().focus().toggleBold().run()"
-          :type="editor.isActive('bold') ? 'primary' : 'default'"
-        >
-          粗体
-        </n-button>
-        <n-button 
-          @click="editor.chain().focus().toggleItalic().run()"
-          :type="editor.isActive('italic') ? 'primary' : 'default'"
-        >
-          斜体
-        </n-button>
-        <n-button 
-          @click="editor.chain().focus().toggleStrike().run()"
-          :type="editor.isActive('strike') ? 'primary' : 'default'"
-        >
-          删除线
-        </n-button>
-        <n-button @click="editor.chain().focus().unsetAllMarks().run()">
-          清除格式
-        </n-button>
-      </n-button-group>
+          <!-- 文本格式组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="editor.chain().focus().toggleBold().run()"
+                :type="editor.isActive('bold') ? 'primary' : 'default'">
+                粗体
+              </n-button>
+              <n-button @click="editor.chain().focus().toggleItalic().run()"
+                :type="editor.isActive('italic') ? 'primary' : 'default'">
+                斜体
+              </n-button>
+              <n-button @click="editor.chain().focus().toggleStrike().run()"
+                :type="editor.isActive('strike') ? 'primary' : 'default'">
+                删除线
+              </n-button>
+              <n-button @click="editor.chain().focus().unsetAllMarks().run()">
+                清除格式
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button 
-          v-for="level in [1, 2, 3]" 
-          :key="level"
-          @click="editor.chain().focus().toggleHeading({ level }).run()"
-          :type="editor.isActive('heading', { level }) ? 'primary' : 'default'"
-        >
-          H{{ level }}
-        </n-button>
-      </n-button-group>
+          <!-- 标题组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button v-for="level in [1, 2, 3]" :key="level"
+                @click="editor.chain().focus().toggleHeading({ level }).run()"
+                :type="editor.isActive('heading', { level }) ? 'primary' : 'default'">
+                H{{ level }}
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button 
-          @click="editor.chain().focus().toggleBulletList().run()"
-          :type="editor.isActive('bulletList') ? 'primary' : 'default'"
-        >
-          无序列表
-        </n-button>
-        <n-button 
-          @click="editor.chain().focus().toggleOrderedList().run()"
-          :type="editor.isActive('orderedList') ? 'primary' : 'default'"
-        >
-          有序列表
-        </n-button>
-      </n-button-group>
+          <!-- 列表组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="editor.chain().focus().toggleBulletList().run()"
+                :type="editor.isActive('bulletList') ? 'primary' : 'default'">
+                无序列表
+              </n-button>
+              <n-button @click="editor.chain().focus().toggleOrderedList().run()"
+                :type="editor.isActive('orderedList') ? 'primary' : 'default'">
+                有序列表
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button 
-          @click="editor.chain().focus().toggleBlockquote().run()"
-          :type="editor.isActive('blockquote') ? 'primary' : 'default'"
-        >
-          引用
-        </n-button>
-        <n-button 
-          @click="editor.chain().focus().toggleCodeBlock().run()"
-          :type="editor.isActive('codeBlock') ? 'primary' : 'default'"
-        >
-          代码块
-        </n-button>
-      </n-button-group>
+          <!-- 引用和代码块组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="editor.chain().focus().toggleBlockquote().run()"
+                :type="editor.isActive('blockquote') ? 'primary' : 'default'">
+                引用
+              </n-button>
+              <n-button @click="editor.chain().focus().toggleCodeBlock().run()"
+                :type="editor.isActive('codeBlock') ? 'primary' : 'default'">
+                代码块
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button @click="editor.chain().focus().setHardBreak().run()">
-          换行
-        </n-button>
-        <n-button @click="insertHorizontalRule">
-          分割线
-        </n-button>
-      </n-button-group>
+          <!-- 其他功能组 -->
+          <div class="button-group">
+            <n-button-group>
+              <n-button @click="editor.chain().focus().setHardBreak().run()">
+                换行
+              </n-button>
+              <n-button @click="insertHorizontalRule">
+                分割线
+              </n-button>
+              <n-button @click="editor.chain().focus().clearNodes().run()">
+                清除节点
+              </n-button>
+            </n-button-group>
+          </div>
 
-      <n-button-group>
-        <n-button @click="editor.chain().focus().clearNodes().run()">
-          清除节点
-        </n-button>
-      </n-button-group>
+          <!-- 图片上传组 -->
+          <div class="button-group">
+            <n-upload :show-file-list="false" @change="handleImageUpload" accept=".jpg,.jpeg,.png,.gif,.webp"
+              :max-size="2097152" @before-upload="beforeUpload">
+              <n-button>插入图片</n-button>
+            </n-upload>
+          </div>
+        </div>
+      </div>
 
-      <n-button-group>
-        <n-upload 
-          :show-file-list="false" 
-          @change="handleImageUpload" 
-          accept=".jpg,.jpeg,.png,.gif,.webp"
-          :max-size="2097152" 
-          @before-upload="beforeUpload"
-        >
-          <n-button>插入图片</n-button>
-        </n-upload>
-      </n-button-group>
+      <!-- 编辑器内容区 -->
+      <div class="editor-content">
+        <editor-content :editor="editor" />
+      </div>
     </div>
 
-    <editor-content :editor="editor" />
+    <!-- 图片菜单 -->
+    <n-dropdown :show="showImageMenu" :options="imageMenuOptions" :x="menuX" :y="menuY" placement="bottom-start"
+      @select="handleImageResize" @clickoutside="closeImageMenu" />
 
-    <n-dropdown 
-      :show="showImageMenu" 
-      :options="imageMenuOptions" 
-      :x="menuX" 
-      :y="menuY" 
-      placement="bottom-start"
-      @select="handleImageResize" 
-      @clickoutside="closeImageMenu" 
-    />
-
-    <n-modal 
-      v-model:show="showCustomSizeModal" 
-      title="自定义图片尺寸" 
-      preset="dialog"
-      positive-text="确认" 
-      negative-text="取消"
-      @positive-click="handleCustomSize" 
-      @negative-click="closeCustomSizeModal"
-    >
+    <!-- 自定义尺寸对话框 -->
+    <n-modal v-model:show="showCustomSizeModal" title="自定义图片尺寸" preset="dialog" positive-text="确认" negative-text="取消"
+      @positive-click="handleCustomSize" @negative-click="closeCustomSizeModal">
       <n-input-group>
         <n-input-number v-model:value="customSize" :min="1" :max="500" :precision="0" />
         <n-button-group>
@@ -147,6 +131,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { NButton, NButtonGroup, NUpload, NDropdown, NModal, NInputGroup, NInputNumber } from 'naive-ui'
 import { CustomDocument } from '../extensions'
+import Placeholder from '@tiptap/extension-placeholder'
 
 const showImageMenu = ref(false)
 const menuX = ref(0)
@@ -182,8 +167,20 @@ const editor = useEditor({
         class: 'resizable-image',
       },
     }),
+    Placeholder.configure({
+      placeholder: ({ node }) => {
+        if (node.type.name === 'heading') {
+          return '请输入标题...'
+        }
+        return '请输入正文内容...'
+      },
+      // 指定要显示占位符的节点类型
+      includeChildren: true,
+      showOnlyCurrent: true,
+      showOnlyWhenEditable: true,
+    }),
   ],
-  content: '<h1>Hi there!</h1><p>This is a basic example of Tiptap.</p>',
+  content: '',
   autofocus: true,
   editable: true,
   onCreate: ({ editor }) => {
@@ -290,7 +287,7 @@ const insertHorizontalRule = () => {
     .focus()
     .setHorizontalRule()
     .run()
-    
+
   setTimeout(() => {
     editor.value.chain()
       .focus()
@@ -301,24 +298,107 @@ const insertHorizontalRule = () => {
 </script>
 
 <style scoped>
+.editor-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  box-sizing: border-box;
+  background-color: #f5f5f5;
+}
+
 .editor {
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .menubar {
-  padding: 0.5rem;
-  border-bottom: 1px solid #ccc;
-  display: flex;
-  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
-:deep(.ProseMirror) {
-  padding: 1rem;
-  min-height: 200px;
-  outline: none;
+.button-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  align-items: center;
+}
 
-  > * + * {
+.button-group {
+  display: flex;
+  align-items: center;
+}
+
+.button-group :deep(.n-button) {
+  padding: 0 0.75rem;
+  height: 32px;
+  font-size: 0.875rem;
+}
+
+.editor-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: #fff;
+}
+
+/* 响应式布局 */
+@media (max-width: 1024px) {
+  .editor-container {
+    padding: 0.75rem;
+  }
+
+  .button-groups {
+    gap: 0.375rem;
+  }
+
+  .button-group :deep(.n-button) {
+    padding: 0 0.5rem;
+    height: 28px;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 0.5rem;
+  }
+
+  .menubar {
+    padding: 0.5rem;
+  }
+
+  .button-groups {
+    gap: 0.25rem;
+  }
+
+  .button-group :deep(.n-button) {
+    padding: 0 0.375rem;
+    height: 26px;
+    font-size: 0.75rem;
+  }
+
+  .editor-content {
+    padding: 1rem;
+  }
+}
+
+/* 编辑器内容样式 */
+:deep(.ProseMirror) {
+  min-height: 100%;
+  outline: none;
+  word-wrap: break-word;
+
+  >*+* {
     margin-top: 0.75em;
   }
 
@@ -336,6 +416,8 @@ const insertHorizontalRule = () => {
   code {
     background-color: rgba(#616161, 0.1);
     color: #616161;
+    padding: 0.2em 0.4em;
+    border-radius: 0.25em;
   }
 
   pre {
@@ -356,6 +438,7 @@ const insertHorizontalRule = () => {
   blockquote {
     padding-left: 1rem;
     border-left: 2px solid rgba(#0D0D0D, 0.1);
+    color: rgba(#0D0D0D, 0.8);
   }
 
   hr {
@@ -364,17 +447,17 @@ const insertHorizontalRule = () => {
     background-color: #e5e7eb;
     margin: 2rem 0;
     padding: 0;
-    
+
     &:hover {
       background-color: #d1d5db;
     }
   }
 
-  hr + * {
+  hr+* {
     margin-top: 1rem;
   }
 
-  * + hr {
+  *+hr {
     margin-top: 1rem;
   }
 }
@@ -386,9 +469,27 @@ const insertHorizontalRule = () => {
   cursor: pointer;
   transition: all 0.3s ease;
   margin: 1em 0;
+
+  &:hover {
+    box-shadow: 0 0 0 2px #68cef8;
+  }
 }
 
-:deep(.resizable-image:hover) {
-  box-shadow: 0 0 0 2px #68cef8;
+/* 自定义滚动条样式 */
+.editor-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.editor-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.editor-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 </style>
